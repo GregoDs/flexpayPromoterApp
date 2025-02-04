@@ -12,17 +12,8 @@ class UserController extends GetxController {
   var bookingReference = ''.obs;
   var bookingPrice = ''.obs;
 
-  // Login function to save token and mark user as logged in
-  void loginUser(String token) {
-    authToken.value = token; // Save the token
-    isLoggedIn.value = true; // Mark user as logged in
-  }
-
-  // Logout function to clear data
-  void logoutUser() {
-    authToken.value = '';
-    isLoggedIn.value = false;
-  }
+  
+  
 
   String getToken() {
     return authToken.value; // Return the token when needed

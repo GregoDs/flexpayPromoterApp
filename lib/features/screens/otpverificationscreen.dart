@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:flexpromoter/features/controllers/authcontroller.dart';
 import 'package:flexpromoter/features/controllers/usercontroller.dart';
 import 'package:flexpromoter/features/screens/homescreen.dart';
+import 'package:flexpromoter/features/screens/loginscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -64,18 +66,29 @@ class _OTPScreenState extends State<OTPScreen> {
         },
       );
 
+      final responseBody = response.body;
+      log("API Response: $responseBody");
+
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
         final userId = responseData['data']['user']['id'];
-        final token = responseData['data']['token'];
-
+        final token = responseData['data']['token']; //Token response is taken here for future use
+        log("Received Token: $token"); //Log the token for debugging
 
         userController.phoneNumber.value = widget.phoneNumber;
         userController.setUserId(userId.toString());
-        userController.loginUser(token);
 
-        _playSuccessVideo();
+        final authController = Get.find<AuthController>();
+        authController.loginUser(token); //this is where the token data is stored in the authcontroller
+        
+        if (authController.isAuthenticated) {
+          log("Token is stored in the authcontroller");
+
+          _playSuccessVideo();
+        }else{
+          Get.offAll(() => LoginScreen());
+        }
       } else {
         _showErrorDialog("Invalid OTP. Please try again.");
         setState(() {
@@ -134,13 +147,13 @@ class _OTPScreenState extends State<OTPScreen> {
       if (response.statusCode == 200 && responseData['success'] == true) {
         log("OTP resent to ${widget.phoneNumber}");
 
-      // Clear the input fields
-      for (var controller in _controllers) {
-        controller.clear();
-      }
-      setState(() {
-        _otp = ''; // Reset the OTP string as well
-      });
+        // Clear the input fields
+        for (var controller in _controllers) {
+          controller.clear();
+        }
+        setState(() {
+          _otp = ''; // Reset the OTP string as well
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("OTP resent successfully")),
