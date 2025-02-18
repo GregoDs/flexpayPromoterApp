@@ -17,10 +17,10 @@ class BookingDetailScreen extends StatelessWidget {
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.black :  const Color(0xFF337687),
+      backgroundColor: isDarkMode ? Colors.black : const Color(0xFF337687),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: isDarkMode ? Colors.black :  const Color(0xFF337687),
+        backgroundColor: isDarkMode ? Colors.black : const Color(0xFF337687),
         centerTitle: true,
         iconTheme: IconThemeData(color: isDarkMode ? Colors.white : Colors.black),
         title: Text(
@@ -56,16 +56,16 @@ class BookingDetailScreen extends StatelessWidget {
                       'Product Name': item['product']?['product_name'] ?? '',
                       'Booking Price': item['booking_price'] ?? '',
                       'Progress': item['progress'] ?? '0',
-                      'Interest Paid': (item['payment'] != null &&
-                              item['payment'].isNotEmpty)
-                          ? item['payment'].first['payment_amount']
-                          : '0',
-                      'Customer Phone':
-                          item['customer']?['phone_number_1'] ?? '',
+                      'Amount Paid': item['total_payments'] ?? '',
+                      'Customer Phone': item['customer']?['phone_number_1'] ?? '',
                       'Booking Date': item['created_at'] ?? '',
                       'Branch': item['outlet']?['outlet_name'] ?? '',
                     }
                   : null;
+
+          final bookingPrice = item['booking_price'] ?? 1; // Avoid division by zero
+          final amountPaid = item['total_payments'] ?? 0;
+          final progress = ((amountPaid / bookingPrice) * 100).clamp(0, 100); // Ensure progress is between 0% - 100%
 
           return Card(
             color: isDarkMode ? Colors.grey[900] : Colors.white,
@@ -75,8 +75,7 @@ class BookingDetailScreen extends StatelessWidget {
             ),
             margin: const EdgeInsets.symmetric(vertical: 8.0),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20.0, vertical: 12.0),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
               title: Text(
                 bookingDetails?['Product Name'] ?? 'Booking Item',
                 style: GoogleFonts.montserrat(
@@ -85,15 +84,50 @@ class BookingDetailScreen extends StatelessWidget {
                   color: isDarkMode ? Colors.white : Colors.black87,
                 ),
               ),
-              subtitle: Text(
-                'Reference: ${bookingDetails?['Booking Reference']}',
-                style: GoogleFonts.montserrat(
-                  fontSize: 14,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
-                ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Reference: ${bookingDetails?['Booking Reference']}',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                    ),
+                  ),
+                  if (isActiveOrCompleted) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Progress: ${bookingDetails?['Progress']}%',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? Colors.green[300] : Colors.green[700],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Progress Bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: progress / 100,
+                        minHeight: 8,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Amount Paid: \kshs ${bookingDetails?['Amount Paid']}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ]
+                ],
               ),
-              trailing: Icon(Icons.chevron_right,
-                  color: isDarkMode ? Colors.white70 : Colors.black54),
+              trailing: Icon(Icons.chevron_right, color: isDarkMode ? Colors.white70 : Colors.black54),
               onTap: () {
                 showDialog(
                   context: context,
@@ -114,8 +148,7 @@ class BookingDetailScreen extends StatelessWidget {
                         child: ListBody(
                           children: bookingDetails!.entries.map((entry) {
                             return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 6.0),
+                              padding: const EdgeInsets.symmetric(vertical: 6.0),
                               child: Text(
                                 '${entry.key}: ${entry.value}',
                                 style: GoogleFonts.montserrat(

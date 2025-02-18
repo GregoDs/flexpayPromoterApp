@@ -131,7 +131,7 @@ class _ValidatedReceiptsPageState extends State<ValidatedReceiptsPage> {
           ),
         ],
         elevation: 0,
-        toolbarHeight: 90.0,
+        toolbarHeight: 100.0,
       ),
       body: SingleChildScrollView(
         child: Column(
